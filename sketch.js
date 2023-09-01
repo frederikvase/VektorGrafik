@@ -1,62 +1,109 @@
 // Variable to move objects on the screen
 let n = 1;
 
+// Camera variables
+let moveSpeed = 5;
+let screenDist = 150;
+
+// Set screen size
+let width = 400;
+let height = 400;
+
 function setup() 
 {
-  createCanvas(400, 400);
+  createCanvas(width, height);
 
-  // Create squares
-  r1 = new Rect(200, 200, 25, 50);
-  r2 = new Rect(200, 200, 40, 30);
+  // Create camera
+  cam = new Camera(0, 0, 200);
+
+  // Create Box
+  box = new Box(0, 0, 0, 100, 200, 50);
 }
 
 function draw() 
 {
   // Set properties of project
   background(40);
-  strokeWeight(5);
   stroke(230);
 
   n += 0.05;
 
-  // Set properties of the first square
-  s1.setScale(cos(n) / 2 + 3);
-  s1.setPos(cos(n / 2) * 50 + 200, sin(n) * 50 + 200);
-  s1.setRotation(n / 3);
+  // Set properties of the box
+  box.setRotation(n / 3);
 
-  s1.updateSquare();
-  s1.draw();
+  // Update camera
+  cam.move((keyIsDown(65) - keyIsDown(68))    * moveSpeed,
+           (keyIsDown(32) - keyIsDown(SHIFT)) * moveSpeed,
+           (keyIsDown(83) - keyIsDown(87))    * moveSpeed);
 
-  // Set properties of the second square
-  s2.setScale(sin(n) / 2 + 2.5);
-  s2.setPos(-cos(n / 2) * 50 + 200, -sin(n) * 50 + 200);
-  s2.setRotation(-n / 5);
-  
-  s2.updateSquare();
-  s2.draw();
+  box.updateSquare();
+  cam.draw(box.getPointsX(), box.getPointsY(), box.getPointsZ());
 }
 
-class Rect
+class Camera
 {
-  constructor(x, y, height, width)
+  constructor(x, y, z)
   {
-    // Coordinate of center
-    this.pos = [x, y];
+    // Set coordinate of camera
+    this.pos = [x, y, z];
+  }
 
-    // Coordinate of local points
-    this.localX = [-width / 2, width / 2,
-                   width / 2, -width / 2];
-    this.localY = [-height / 2, -height / 2,
-                    height / 2,  height / 2];
+  move(x, y, z)
+  {
+    this.pos[0] += x;
+    this.pos[1] += y;
+    this.pos[2] += z;
+  }
 
-    // Scene coordinate of points
-    this.pointX = [x + this.localX[0], x + this.localX[1],
-                   x + this.localX[2], x + this.localX[3]];
-    this.pointY = [y + this.localY[0], y + this.localY[1],
-                   y + this.localY[2], y + this.localY[3]];
+  draw(arrX, arrY, arrZ)
+  {
+    for (let i = 0; i < arrX.length - 1; i++)
+    {
+      for (let j = i + 1; j < arrX.length; j++)
+      {
+        if (arrZ[j] < this.pos[2] && arrZ[i] < this.pos[2])
+        {
+          // Set variables for start point of line
+          let sx = arrX[i];
+          let sy = arrY[i];
+          let sz = arrZ[i];
+
+          // Set variables for end point of line
+          let ex = arrX[j];
+          let ey = arrY[j];
+          let ez = arrZ[j];
+
+          // Get coordinates for points on the scene
+          let x1 = (screenDist * (sx - this.pos[0])) / (sz - this.pos[2]) + width / 2;
+          let y1 = (screenDist * (sy - this.pos[1])) / (sz - this.pos[2]) + height / 2;
+          let x2 = (screenDist * (ex - this.pos[0])) / (ez - this.pos[2]) + width / 2;
+          let y2 = (screenDist * (ey - this.pos[1])) / (ez - this.pos[2]) + height / 2;
+
+          line(x1, y1, x2, y2);
+        }
+      }
+    }
+  }
+}
+
+class Object 
+{
+  constructor(pointCount) 
+  {
+    this.pos = [0, 0];
 
     this.scale = 1;
     this.dir = [1, 0];
+
+    this.pointCount = pointCount;
+
+    this.localX = new Array(pointCount);
+    this.localY = new Array(pointCount);
+    this.localZ = new Array(pointCount);
+
+    this.pointX = new Array(pointCount);
+    this.pointY = new Array(pointCount);
+    this.pointZ = new Array(pointCount);
   }
 
   draw()
@@ -85,10 +132,61 @@ class Rect
   updateSquare()
   {
     // Update scene coordinates of points
-    for (let i = 0; i < 4; i++)
+    for (let i = 0; i < this.pointCount; i++)
     {
       this.pointX[i] = this.pos[0] + this.dir[0] * (this.localX[i] * this.scale) - this.dir[1] * (this.localY[i] * this.scale);
       this.pointY[i] = this.pos[1] + this.dir[0] * (this.localY[i] * this.scale) + this.dir[1] * (this.localX[i] * this.scale);
+      this.pointZ[i] = this.pos[2] + this.localZ[i];
     }
+  }
+
+  getPointsX()
+  {
+    return this.pointX;
+  }
+
+  getPointsY()
+  {
+    return this.pointY;
+  }
+
+  getPointsZ()
+  {
+    return this.pointZ;
+  }
+
+  setLocalPoints(x, y, z)
+  {
+    this.localX = x;
+    this.localY = y;
+    this.localZ = z;
+  }
+}
+
+class Box extends Object
+{
+  constructor(x, y, z, h, w, d)
+  {
+    super(8);
+
+    // Coordinate of center
+    super.pos = [x, y, z];
+
+    // Coordinate of local points
+    let localX = [-w / 2,  w / 2,
+                   w / 2, -w / 2,
+                  -w / 2,  w / 2,
+                   w / 2, -w / 2];
+
+    let localY = [ h / 2,  h / 2,
+                  -h / 2, -h / 2,
+                  -h / 2, -h / 2,
+                   h / 2,  h / 2];
+
+    let localZ = [d/2,  d/2,  d/2,  d/2, 
+                 -d/2, -d/2, -d/2, -d/2];
+
+    super.setLocalPoints(localX, localY, localZ);
+    super.updateSquare();
   }
 }
