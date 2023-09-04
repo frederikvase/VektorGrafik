@@ -29,7 +29,9 @@ function draw()
   n += 0.05;
 
   // Set properties of the box
-  box.setRotation(n / 3);
+  box.rotateX(2 / 180 * 3.1415);
+  box.rotateY(1 / 180 * 3.1415);
+  box.rotateZ(2.05 / 180 * 3.1415);
 
   // Update camera
   cam.move((keyIsDown(65) - keyIsDown(68))    * moveSpeed,
@@ -79,6 +81,7 @@ class Camera
           let x2 = (screenDist * (ex - this.pos[0])) / (ez - this.pos[2]) + width / 2;
           let y2 = (screenDist * (ey - this.pos[1])) / (ez - this.pos[2]) + height / 2;
 
+          // Draw line
           line(x1, y1, x2, y2);
         }
       }
@@ -93,7 +96,9 @@ class Object
     this.pos = [0, 0];
 
     this.scale = 1;
-    this.dir = [1, 0];
+    this.dir = [1, 0, 0,  // Direction along x-axis
+                0, 1, 0,  // Direction along y-axis
+                0, 0, 1]; // Direction along z-axis
 
     this.pointCount = pointCount;
 
@@ -124,9 +129,52 @@ class Object
     this.pos = [x, y];
   }
 
-  setRotation(angle)
+  rotateX(angle)
   {
-    this.dir = [cos(angle), sin(angle)];
+    let x = cos(angle);
+    let y = sin(angle);
+
+    this.dir = [(this.dir[0]*x - this.dir[3]*y), // X-axis
+                (this.dir[1]*x - this.dir[4]*y), 
+                (this.dir[2]*x - this.dir[5]*y),
+                (this.dir[3]*x + this.dir[0]*y), // Y-axis
+                (this.dir[4]*x + this.dir[1]*y), 
+                (this.dir[5]*x + this.dir[2]*y),
+                (this.dir[6]),                   // Z-axis
+                (this.dir[7]),
+                (this.dir[8])];
+  }
+
+  rotateY(angle)
+  {
+    let x = cos(angle);
+    let y = sin(angle);
+
+    this.dir = [(this.dir[0]*x + this.dir[6]*y), // X-axis
+                (this.dir[1]*x + this.dir[7]*y), 
+                (this.dir[2]*x + this.dir[8]*y),
+                (this.dir[3]),                   // Y-axis
+                (this.dir[4]),
+                (this.dir[5]),
+                (this.dir[6]*x - this.dir[0]*y), // Z-axis
+                (this.dir[7]*x - this.dir[1]*y), 
+                (this.dir[8]*x - this.dir[2]*y)];
+  }
+
+  rotateZ(angle)
+  {
+    let x = cos(angle);
+    let y = sin(angle);
+
+    this.dir = [(this.dir[0]), // X-axis
+                (this.dir[1]), 
+                (this.dir[2]),
+                (this.dir[3] * x + this.dir[6] * y),                   // Y-axis
+                (this.dir[4] * x + this.dir[7] * y),
+                (this.dir[5] * x + this.dir[8] * y),
+                (this.dir[6] * x - this.dir[3] * y), // Z-axis
+                (this.dir[7] * x - this.dir[4] * y), 
+                (this.dir[8] * x - this.dir[5] * y)];
   }
 
   updateSquare()
@@ -134,9 +182,9 @@ class Object
     // Update scene coordinates of points
     for (let i = 0; i < this.pointCount; i++)
     {
-      this.pointX[i] = this.pos[0] + this.dir[0] * (this.localX[i] * this.scale) - this.dir[1] * (this.localY[i] * this.scale);
-      this.pointY[i] = this.pos[1] + this.dir[0] * (this.localY[i] * this.scale) + this.dir[1] * (this.localX[i] * this.scale);
-      this.pointZ[i] = this.pos[2] + this.localZ[i];
+      this.pointX[i] = this.pos[0] + (this.dir[0] * this.localX[i] + this.dir[3] * this.localY[i] + this.dir[6] * this.localZ[i]) * this.scale;
+      this.pointY[i] = this.pos[1] + (this.dir[1] * this.localX[i] + this.dir[4] * this.localY[i] + this.dir[7] * this.localZ[i]) * this.scale;
+      this.pointZ[i] = this.pos[2] + (this.dir[2] * this.localX[i] + this.dir[5] * this.localY[i] + this.dir[8] * this.localZ[i]) * this.scale;
     }
   }
 
