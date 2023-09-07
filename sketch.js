@@ -17,7 +17,7 @@ function setup()
   cam = new Camera(0, 0, 200);
 
   // Create Box
-  box = new Box(0, 0, 0, 100, 200, 50);
+  box = new Box(0, 0, 0, 100, 100, 100);
 }
 
 function draw() 
@@ -28,10 +28,14 @@ function draw()
 
   n += 0.05;
 
+  box.setScaleX((sin(n) + 2) / 2);
+  box.setScaleY((sin(n / 4) + 2) / 2);
+  box.setScaleZ((sin(n / 8) + 2) / 2);
+
   // Set properties of the box
-  box.rotateX(2 / 180 * 3.1415);
-  box.rotateY(1 / 180 * 3.1415);
-  box.rotateZ(2.05 / 180 * 3.1415);
+  box.rotateX(0.5 / 180 * 3.1415);
+  box.rotateY(0.25 / 180 * 3.1415);
+  box.rotateZ(1 / 180 * 3.1415);
 
   // Update camera
   cam.move((keyIsDown(65) - keyIsDown(68))    * moveSpeed,
@@ -95,7 +99,10 @@ class Object
   {
     this.pos = [0, 0];
 
-    this.scale = 1;
+    this.scaleX = 1;
+    this.scaleY = 1;
+    this.scaleZ = 1;
+
     this.dir = [1, 0, 0,  // Direction along x-axis
                 0, 1, 0,  // Direction along y-axis
                 0, 0, 1]; // Direction along z-axis
@@ -121,7 +128,24 @@ class Object
 
   setScale(s)
   {
-    this.scale = s;
+    this.scaleX = s;
+    this.scaleY = s;
+    this.scaleZ = s;
+  }
+
+  setScaleX(x)
+  {
+    this.scaleX = x;
+  }
+
+  setScaleY(y)
+  {
+    this.scaleY = y;
+  }
+
+  setScaleZ(z)
+  {
+    this.scaleX = z;
   }
 
   setPos(x, y)
@@ -182,9 +206,9 @@ class Object
     // Update scene coordinates of points
     for (let i = 0; i < this.pointCount; i++)
     {
-      this.pointX[i] = this.pos[0] + (this.dir[0] * this.localX[i] + this.dir[3] * this.localY[i] + this.dir[6] * this.localZ[i]) * this.scale;
-      this.pointY[i] = this.pos[1] + (this.dir[1] * this.localX[i] + this.dir[4] * this.localY[i] + this.dir[7] * this.localZ[i]) * this.scale;
-      this.pointZ[i] = this.pos[2] + (this.dir[2] * this.localX[i] + this.dir[5] * this.localY[i] + this.dir[8] * this.localZ[i]) * this.scale;
+      this.pointX[i] = this.pos[0] + (this.dir[0] * this.localX[i]) * this.scaleX + (this.dir[3] * this.localY[i]) * this.scaleY + (this.dir[6] * this.localZ[i]) * this.scaleZ;
+      this.pointY[i] = this.pos[1] + (this.dir[1] * this.localX[i]) * this.scaleX + (this.dir[4] * this.localY[i]) * this.scaleY + (this.dir[7] * this.localZ[i]) * this.scaleZ;
+      this.pointZ[i] = this.pos[2] + (this.dir[2] * this.localX[i]) * this.scaleX+ (this.dir[5] * this.localY[i]) * this.scaleY + (this.dir[8] * this.localZ[i]) * this.scaleZ;
     }
   }
 
