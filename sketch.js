@@ -1,3 +1,7 @@
+////////////////////////////
+///3D Lighting Simulation///
+////////////////////////////
+
 // Visual variables
 let noStroke = true;
 let pointLight = true;
@@ -22,9 +26,15 @@ function setup()
   // Create Box
   box = new Box(0, 0, 0, 200, 100, 50);
 
+  box2 = new Box(300, 20, 0, 200, 200, 50);
+
+  box.rotateX(20 / 180 * 3.1415);
+  box.rotateY(30 / 180 * 3.1415);
+  box.rotateZ(30 / 180 * 3.1415);
+
   // Set box to random color
   if (setToRandomColor)
-    box.setColor([random(200, 255), random(200,255), random(200,255)]);
+    box.setColor([255, 0, 255]);
 }
 
 function draw() 
@@ -38,6 +48,7 @@ function draw()
     //box.rotateX(2 / 180 * 3.1415);
     box.rotateY(1 / 180 * 3.1415);
     box.rotateZ(0.7 / 180 * 3.1415);
+    box2.rotateZ(0.7 / 180 * 3.1415);
   }
   
   // Update camera
@@ -46,7 +57,9 @@ function draw()
            (keyIsDown(83) - keyIsDown(87))    * moveSpeed);
 
   box.updateSquare();
+  box2.updateSquare();
   cam.draw(box.getPointsX(), box.getPointsY(), box.getPointsZ(), box.getTriArr(), box.getColor());
+  cam.draw(box2.getPointsX(), box2.getPointsY(), box2.getPointsZ(), box2.getTriArr(), box2.getColor());
 }
 
 function cross(x1, y1, z1, x2, y2, z2)
@@ -131,9 +144,9 @@ class Camera
 
         // Calculate lighting
         let lightVec = {
-          x: this.pos.x - (c1.x - width  / 2) - mouseX,
-          y: this.pos.y - (c1.y - height / 2) - mouseY,
-          z: this.pos.z - c1.z + height 
+          x: this.pos.x - c1.x - (mouseX - width / 2),
+          y: this.pos.y - c1.y - (mouseY - height / 2),
+          z: this.pos.z - c1.z  
         };
 
         let intensity;
